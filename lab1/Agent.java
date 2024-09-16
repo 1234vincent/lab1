@@ -1,131 +1,142 @@
 package lab1;
 
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 public class Agent {
-	//fields
-	private Point location;
-	private int energy;
-	private String identity;
+    // fields
+    private Point location;
+    private int energy;
+    private String identity;
 
-	//constructor
-	public Agent() {
-		this.location = new Point(0,0);
-		this.energy=10;
-		this.identity = "A";
-	}//constructor
-	
-	public void setX(int x) {
-		this.location.setX(x);
-	}
-	
-	public int getX() {
-		return this.location.getX();
-	}
+    // constructor
+    public Agent() {
+        this.location = new Point(0, 0);
+        this.energy = 10;
+        this.identity = "A";
+    }
 
-	public int getY() {
-		return this.location.getY();
-	}
+    public void setX(int x) {
+        this.location.setX(x);
+    }
 
-	public void setY(int y) {
-		this.location.setY(y);
-	}
+    public int getX() {
+        return this.location.getX();
+    }
 
-	public Point getLocation(){
-		return this.location;
-	}
+    public int getY() {
+        return this.location.getY();
+    }
 
-	public void setLocation(Point newSpot){
-		this.location = newSpot;
-	}
+    public void setY(int y) {
+        this.location.setY(y);
+    }
 
-	public int getEnergy() {
-		return energy;
-	}
+    public Point getLocation() {
+        return this.location;
+    }
 
-	public void setEnergy(int energy) {
-		this.energy = energy;
-	}
+    public void setLocation(Point newSpot) {
+        this.location = newSpot;
+    }
 
-	public String getIdentity() {
-		return this.identity;
-	}
-	
+    public int getEnergy() {
+        return energy;
+    }
 
-	//we need to check if occupied before each move and have a plan of what to do if it is occupied
-	//also the replacement case for food bc it'll replace food in the cell
-	public void move(Display d, Point p) {
-		if(!this.occupied(d, p)){
-			//i think we need to edit this because i don't think it moves randomly each time
-			Random r = new Random();
-			int rInt = r.nextInt(3) + 1;
-			switch(rInt) {
-			case 1:
-				up();
-				break;
-			case 2:
-				down();
-				break;
-			case 3:
-				right();
-				break;
-			case 4:
-				left();
-				break;
-			default://stay put
-				setX(getX());
-				setY(getY());
-			}
-		}
-	}
-	
-	public void up() {
-		this.setY(this.getY()+1);
-	}
-	
-	public void down() {
-		this.setY(this.getY()-1);
-	}
-	
-	public void right() {
-		this.setX(this.getX()+1);
-	}
-	
-	public void left() {
-		this.setX(this.getX()+1);
-	}
-	
-	/*occupied(Point p)
-	Point p is a point on the gameboard. This method will return true if it's occupied by another agent, 
-	an obstacle O, food F, or the goal. It will not return true if the point is the origin. All necessary
-	updates will happen in this method: if it's occupied with food, the agent querying will receive a food boost.
-	If it's occupied with an obstacle, the agent will lose a life, etc. NOT DPNE
-	*/
+    public void setEnergy(int energy) {
+        this.energy = energy;
+    }
 
-	public boolean occupied(Display d, Point p) {
-		if(d.getDisplay().containsKey(p)){//if it's in the display
-			//update agent accordingly: food or obstacle
-			switch(d.getDisplay().get(p)){
-				case "A": //it's hitting another agent, so nothing is happening
-				return true;
-				case "F":
-				Food f = new Food();
-				f.giveEnergy(this);
-				//give it energy
-				//remove F from hashmap? or keep it?
-				return false; //technically, it is occupied, but agents can occupy the same space as food/take the space
-				case "O":// it hits an obstacle
-				//take energy away
-				Obs o = new Obs();
-				o.takeEnergy(this);
-				return true;
-				default: //it didn't hit an agent, an obstacle, or food, so the space was empty, the goal, or the initialState
-				return false; //bc the space wasn't occupied
-				//working right here, do the identities
-			}
-		}else{
-			System.out.println("Point is not in display- what is going on!");
-			return false;
-		}
-	}
+    public String getIdentity() {
+        return this.identity;
+    }
+
+    // Move function to move the agent in a specific direction
+    public boolean move(Direction direction, Display d) {
+        Point newPoint = new Point(getX(), getY());
+        switch (direction) {
+            case UP:
+                newPoint.setY(getY() + 1);
+                break;
+            case DOWN:
+                newPoint.setY(getY() - 1);
+                break;
+            case RIGHT:
+                newPoint.setX(getX() + 1);
+                break;
+            case LEFT:
+                newPoint.setX(getX() - 1);
+                break;
+        }
+        // Check if the new position is valid and move if it is
+        if (!occupied(d, newPoint)) {
+            setLocation(newPoint);
+            return true;
+        }
+        return false;
+    }
+
+    // DFS to eat all food
+    public void dfs(Display d, Set<Point> visited) {
+        Point currentLocation = getLocation();
+        visited.add(currentLocation);
+        
+        // Try moving in all 4 directions
+        for (Direction direction : Direction.values()) {
+            Point newPoint = getNextPoint(currentLocation, direction);
+            if (newPoint != null && !visited.contains(newPoint) && move(direction, d) && !occupied(d, newPoint)) {
+                dfs(d, visited);
+            }
+        }
+    }
+
+    // Get the next point based on direction
+    private Point getNextPoint(Point current, Direction direction) {
+        switch (direction) {
+            case UP:
+                return new Point(current.getX(), current.getY() + 1);
+            case DOWN:
+                return new Point(current.getX(), current.getY() - 1);
+            case RIGHT:
+                return new Point(current.getX() + 1, current.getY());
+            case LEFT:
+                return new Point(current.getX() - 1, current.getY());
+            default:
+                return null;
+        }
+    }
+
+    // Check if a point is occupied
+    public boolean occupied(Display d, Point p) {
+        if (d.getDisplay().containsKey(p)) { // if it's in the display
+            // Update agent accordingly: food or obstacle
+            switch (d.getDisplay().get(p)) {
+				case "A": // It hits another agent
+					return true;
+                case "F":
+                    Food f = new Food();
+                    f.giveEnergy(this);
+                    // Give it energy
+                    // Remove F from hashmap? or keep it?
+                    return false; // Agents can occupy the same space as food/take the space
+                case "O": // It hits an obstacle
+                    // Take energy away
+                    Obs o = new Obs();
+                    o.takeEnergy(this);
+                    return true;
+                default: // It didn't hit an agent, an obstacle, or food, so the space was empty, the goal, or the initialState
+                    return false; // Because the space wasn't occupied
+            }
+        } else {
+            exit(1);
+            return false;
+        }
+    }
+
+    // Enum for directions
+    enum Direction {
+        UP, DOWN, LEFT, RIGHT
+    }
 }
