@@ -1,6 +1,7 @@
 package lab1;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -9,12 +10,14 @@ public class Agent {
     private Point location;
     private int energy;
     private String identity;
+    private Map<Direction, Double> strategy;
 
     // constructor
-    public Agent() {
+    public Agent(Map<Direction, Double> strategy) {
         this.location = new Point(0, 0);
         this.energy = 10;
         this.identity = "A";
+        this.strategy = strategy;
     }
 
     public void setX(int x) {
@@ -78,8 +81,43 @@ public class Agent {
         return false;
     }
 
-    // DFS to eat all food
-    public void dfs(Display d, Set<Point> visited) {
+    // Getter for strategy
+    public Map<Direction, Double> getStrategy() {
+        return strategy;
+    }
+
+    // Setter for strategy
+    public void setStrategy(Map<Direction, Double> strategy) {
+        this.strategy = strategy;
+    }
+
+    // Deciding the action based on the strategy
+    // Creates a random number between 0 and 1
+    // Then, it goes through the strategy map and adds the probability of each action
+    // If the random number is less than the cumulative probability, it returns the action
+    public Direction decideAction() {
+
+		double rand = Math.random(); // Random number between 0.0 and 1.0
+		double cumulativeProbability = 0.0; // Cumulative probability that is used to choose an action
+
+		for (Map.Entry<Direction, Double> entry : strategy.entrySet()) {
+			cumulativeProbability += entry.getValue();
+			if (rand <= cumulativeProbability) {
+				return entry.getKey();
+			}
+		}
+		// In case of error; default action is UP
+		return Direction.UP;
+	}
+
+
+
+
+    /*
+    DFS to eat all food, leaving just in case
+
+
+     *     public void dfs(Display d, Set<Point> visited) {
         Point currentLocation = getLocation();
         visited.add(currentLocation);
         
@@ -91,6 +129,8 @@ public class Agent {
             }
         }
     }
+     */
+
 
     // Get the next point based on direction
     private Point getNextPoint(Point current, Direction direction) {
@@ -112,31 +152,36 @@ public class Agent {
     public boolean occupied(Display d, Point p) {
         if (d.getDisplay().containsKey(p)) { // if it's in the display
             // Update agent accordingly: food or obstacle
+
             switch (d.getDisplay().get(p)) {
+
 				case "A": // It hits another agent
 					return true;
+
                 case "F":
                     Food f = new Food();
                     f.giveEnergy(this);
                     // Give it energy
                     // Remove F from hashmap? or keep it?
                     return false; // Agents can occupy the same space as food/take the space
+
                 case "O": // It hits an obstacle
                     // Take energy away
                     Obs o = new Obs();
                     o.takeEnergy(this);
                     return true;
+
                 default: // It didn't hit an agent, an obstacle, or food, so the space was empty, the goal, or the initialState
                     return false; // Because the space wasn't occupied
             }
         } else {
-            exit(1);
+			System.out.println("Point is not in display- what is going on!");
             return false;
         }
     }
 
     // Enum for directions
-    enum Direction {
+    public enum Direction {
         UP, DOWN, LEFT, RIGHT
     }
 }
