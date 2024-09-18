@@ -18,6 +18,8 @@ public class Agent {
         this.energy = 10;
         this.identity = "A";
         this.strategy = strategy;
+        this.start = new Point(0, 0);
+        this.end = new Point(0,0);
     }
 
     public void setX(int x) {
@@ -56,6 +58,47 @@ public class Agent {
         return this.identity;
     }
 
+
+    public Point getStart() {
+        return this.start;
+    }
+
+    public Point getEnd() {
+        return this.end;
+    }
+
+    public void setStart(Point start) {
+        this.start = start;
+    }
+
+    public void setEnd(Point end) {
+        this.end = end;
+    }
+
+    public void initstart(Display d) {
+        int x = Math.random(24)+1; 
+        int y = Math.random(24)+1;
+        Point p = new Point(x,y);
+        while(occupied(d, p)){
+            x = Math.random(24)+1;
+            y = Math.random(24)+1;
+            p = new Point(x,y);
+        }        
+        setStart(p);
+    }
+
+
+    public  vodi initend(Display d) {
+        int x = Math.random(24)+1;
+        int y = Math.random(24)+1;
+        Point p = new Point(x,y);
+        while(occupied(d, p)){
+            x = Math.random(24)+1;
+            y = Math.random(24)+1;
+            p = new Point(x,y);
+        }        
+        setEnd(p);
+    }
     // Move function to move the agent in a specific direction
     public boolean move(Direction direction, Display d) {
         Point newPoint = new Point(getX(), getY());
@@ -79,6 +122,30 @@ public class Agent {
             return true;
         }
         return false;
+    }
+
+    //
+    public void startmoving(Display d, Agent a) {
+        initend(d);
+        initstart(d);
+        Point currentLocation = getLocation();
+        Set<Point> visited = new HashSet<>();
+        while(!currentLocation.equals(a.getEnd())){
+            visited.add(currentLocation);
+            Direction direction = decideAction();
+            if(move(direction, d)){
+                currentLocation = getLocation();
+            }
+            else{
+                while(true){
+                    direction = decideAction();
+                    if(move(direction, d)){
+                        currentLocation = getLocation();
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     // Getter for strategy

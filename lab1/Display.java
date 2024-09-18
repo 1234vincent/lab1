@@ -32,6 +32,7 @@ public class Display {
 			x++;
 		}
 		System.out.println(); 
+
 	}
 	
 }

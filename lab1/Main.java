@@ -1,6 +1,10 @@
 package lab1;
 
 public class Main {
+
+    public static move(Agent agent, Direction direction) {
+        
+    }
 	public static void main(String[] args) {
 		System.out.println("Hello world");
 		Display d = new Display();
