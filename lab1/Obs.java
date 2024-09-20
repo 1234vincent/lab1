@@ -1,30 +1,33 @@
 package lab1;
 
 public class Obs {
-	private Point location;
-	private String identity = "O";
+    private Point location;
+    private String identity = "O";
 
-	public Obs () {
-		this.setLocation(new Point());
-	}
-	
-	public Obs(Point c) {
-		this.setLocation(c);
-	}
+    // Default constructor
+    public Obs() {
+        // Initialize location to default values (e.g., (0, 0))
+        this.setLocation(new Point(0, 0));
+    }
 
-	public Point getLocation() {
-		return location;
-	}
+    // Constructor with Point parameter
+    public Obs(Point c) {
+        this.setLocation(c);
+    }
 
-	public void setLocation(Point location) {
-		this.location = location;
-	}
+    public Point getLocation() {
+        return location;
+    }
 
-	public String getIdentity() {
-		return this.identity;
-	}
+    public void setLocation(Point location) {
+        this.location = location;
+    }
 
-	public void takeEnergy(Agent a){
-		a.setEnergy(a.getEnergy()-1);
-	}
+    public String getIdentity() {
+        return this.identity;
+    }
+
+    public void takeEnergy(Agent a) {
+        a.setEnergy(a.getEnergy() - 1);
+    }
 }

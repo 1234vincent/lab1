@@ -11,6 +11,8 @@ public class Agent {
     private int energy;
     private String identity;
     private Map<Direction, Double> strategy;
+    private Point start;
+    private Point end;
 
     // constructor
     public Agent(Map<Direction, Double> strategy) {
@@ -76,43 +78,81 @@ public class Agent {
     }
 
     public void initstart(Display d) {
-        int x = Math.random(24)+1; 
-        int y = Math.random(24)+1;
-        Point p = new Point(x,y);
-        while(occupied(d, p)){
-            x = Math.random(24)+1;
-            y = Math.random(24)+1;
-            p = new Point(x,y);
-        }        
-        setStart(p);
+        Random random = new Random();
+        int attempts = 0;
+        int maxAttempts = 100; // Limit the number of attempts
+        Point p = null;
+    
+        while (attempts < maxAttempts) {
+            int x = random.nextInt(24) + 1;
+            int y = random.nextInt(24) + 1;
+            p = new Point(x, y);
+    
+            if (!occupied(d, p)) {
+                break;
+            }
+            attempts++;
+        }
+    
+        if (p != null && !occupied(d, p)) {
+            setStart(p);
+            setLocation(p);
+        } else {
+            System.out.println("Failed to find a valid starting position.");
+        }
     }
-
-
-    public  vodi initend(Display d) {
-        int x = Math.random(24)+1;
-        int y = Math.random(24)+1;
-        Point p = new Point(x,y);
-        while(occupied(d, p)){
-            x = Math.random(24)+1;
-            y = Math.random(24)+1;
-            p = new Point(x,y);
-        }        
-        setEnd(p);
+    
+    public void initend(Display d) {
+        Random random = new Random();
+        int attempts = 0;
+        int maxAttempts = 100; // Limit the number of attempts
+        Point p = null;
+    
+        while (attempts < maxAttempts) {
+            int x = random.nextInt(24) + 1;
+            int y = random.nextInt(24) + 1;
+            p = new Point(x, y);
+    
+            if (!occupied(d, p)) {
+                break;
+            }
+            attempts++;
+        }
+    
+        if (p != null && !occupied(d, p)) {
+            setEnd(p);
+        } else {
+            System.out.println("Failed to find a valid end position.");
+        }
     }
+    
     // Move function to move the agent in a specific direction
     public boolean move(Direction direction, Display d) {
         Point newPoint = new Point(getX(), getY());
+      //  System.out.println("Direction: " + newPoint.getX() + " " + newPoint.getY());
         switch (direction) {
             case UP:
+                if (getY() == 24) {
+                    return false;
+                }
                 newPoint.setY(getY() + 1);
                 break;
             case DOWN:
+                if(getY() == 0){
+                    return false;
+                }
                 newPoint.setY(getY() - 1);
                 break;
             case RIGHT:
+                if(getX() == 24){
+                    return false;
+                }
                 newPoint.setX(getX() + 1);
                 break;
             case LEFT:
+                if(getX() == 0){
+                    return false;
+                }
                 newPoint.setX(getX() - 1);
                 break;
         }
@@ -124,29 +164,38 @@ public class Agent {
         return false;
     }
 
-    //
+    // Start moving function
     public void startmoving(Display d, Agent a) {
+        int moveCount = 0;
         initend(d);
         initstart(d);
         Point currentLocation = getLocation();
         Set<Point> visited = new HashSet<>();
-        while(!currentLocation.equals(a.getEnd())){
+    
+        while (!currentLocation.equals(a.getEnd())) {
             visited.add(currentLocation);
             Direction direction = decideAction();
-            if(move(direction, d)){
+    
+            if (move(direction, d)) {
                 currentLocation = getLocation();
-            }
-            else{
-                while(true){
+            } else {
+                while (true) {
                     direction = decideAction();
-                    if(move(direction, d)){
+                    if (move(direction, d)) {
                         currentLocation = getLocation();
                         break;
                     }
                 }
             }
+            moveCount++;
         }
+        System.out.println("Total number of moves : " + moveCount);
+        System.out.println(a.start.getX() + " " + a.start.getY());
+        System.out.println(a.end.getX() + " " + a.end.getY());
+        System.out.println("Agent successfully reached the destination.");
     }
+          
+    
 
     // Getter for strategy
     public Map<Direction, Double> getStrategy() {
@@ -164,18 +213,18 @@ public class Agent {
     // If the random number is less than the cumulative probability, it returns the action
     public Direction decideAction() {
 
-		double rand = Math.random(); // Random number between 0.0 and 1.0
-		double cumulativeProbability = 0.0; // Cumulative probability that is used to choose an action
+        double rand = Math.random(); // Random number between 0.0 and 1.0
+        double cumulativeProbability = 0.0; // Cumulative probability that is used to choose an action
 
-		for (Map.Entry<Direction, Double> entry : strategy.entrySet()) {
-			cumulativeProbability += entry.getValue();
-			if (rand <= cumulativeProbability) {
-				return entry.getKey();
-			}
-		}
-		// In case of error; default action is UP
-		return Direction.UP;
-	}
+        for (Map.Entry<Direction, Double> entry : strategy.entrySet()) {
+            cumulativeProbability += entry.getValue();
+            if (rand <= cumulativeProbability) {
+                return entry.getKey();
+            }
+        }
+        // In case of error; default action is UP
+        return Direction.UP;
+    }
 
 
 
@@ -215,40 +264,55 @@ public class Agent {
         }
     }
 
+    public String[] getall(Display display) {
+        String[] all = new String[625];
+        for (int i = 0; i < 25; i++) {
+            for (int j = 0; j < 25; j++) {
+                Point p = new Point(i, j);
+                if (display.getDisplay().containsKey(p)) {
+                    all[i * 25 + j] = display.getDisplay().get(p);
+                } else {
+                    all[i * 25 + j] = " ";
+                }
+            }
+        }
+        return all;
+    }
     // Check if a point is occupied
     public boolean occupied(Display d, Point p) {
-        if (d.getDisplay().containsKey(p)) { // if it's in the display
-            // Update agent accordingly: food or obstacle
-
-            switch (d.getDisplay().get(p)) {
-
-				case "A": // It hits another agent
-					return true;
-
-                case "F":
+        String[] a = getall(d);  // This gets all display elements
+        Point cur = new Point(p.getX(), p.getY());
+      //  System.out.println("Display is : " + a);
+        System.out.println("Current Point: " + cur.getX() + ", " + cur.getY());
+    
+        if (d.getDisplay().containsKey(cur)) { 
+            // If the point exists in the display, check what it contains
+            String value = d.getDisplay().get(p);
+    
+            switch (value) {
+                case "I":  // Hits another agent
+                    return true;
+                case "$":  // Hits food
                     Food f = new Food();
                     f.giveEnergy(this);
-                    // Give it energy
-                    // Remove F from hashmap? or keep it?
-                    return false; // Agents can occupy the same space as food/take the space
-
-                case "O": // It hits an obstacle
-                    // Take energy away
+                    return false;  // The agent can occupy the same space as food
+                case "0":  // Hits an obstacle
                     Obs o = new Obs();
                     o.takeEnergy(this);
                     return true;
-
-                default: // It didn't hit an agent, an obstacle, or food, so the space was empty, the goal, or the initialState
-                    return false; // Because the space wasn't occupied
+                default:  // Empty, goal, or other case
+                    return false;
             }
         } else {
-			System.out.println("Point is not in display- what is going on!");
+            // If the point is not in the display, assume it's not occupied
+            System.out.println("Point is not in the display!");
             return false;
         }
     }
-
-    // Enum for directions
-    public enum Direction {
-        UP, DOWN, LEFT, RIGHT
-    }
+    
+        // Enum for directions
+        public enum Direction {
+            UP, DOWN, LEFT, RIGHT
+        }
 }
+
