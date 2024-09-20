@@ -1,10 +1,9 @@
 package lab1;
 
+import java.util.HashMap;
+
 public class Main {
 
-    public static move(Agent agent, Direction direction) {
-        
-    }
 	public static void main(String[] args) {
 		System.out.println("Hello world");
 		Display d = new Display();
@@ -39,13 +38,19 @@ public class Main {
             {'-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-', '-'}
         };
 		
-        
+        HashMap<Point, String> map = new HashMap<>();
+
         for (int i = 0; i < grid.length; i++) {
             for (int j = 0; j < grid[i].length; j++) {
-                System.out.print(grid[i][j]);
+                Point p = new Point(i, j);
+                map.put(point, Character.toString(grid[i][j]));
             }
-            System.out.println();
-        } 
+        }
+
+        // 打印 HashMap 的内容
+        for (Point point : map.keySet()) {
+            System.out.println("Point: (" + point.getX() + ", " + point.getY() + ") -> " + map.get(point));
+        }
 	}
 
 }
